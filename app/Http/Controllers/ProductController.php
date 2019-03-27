@@ -6,6 +6,7 @@ use App\Http\Resources\Product\ProductCollection;
 use App\Http\Resources\Product\ProductResource;
 use App\Model\Product;
 use Illuminate\Http\Request;
+use App\Http\Requests\ProductRequest;
 
 class ProductController extends Controller
 {
@@ -14,12 +15,24 @@ class ProductController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+
+    public function __construct(){
+    
+        $this->middleware('auth:api')->except('index','show');
+    }
+
+
     public function index(Product $product)
     {
         return  ProductCollection::collection(Product::paginate(4));
        
     }
 
+   
+
+
+
+ 
     /**
      * Show the form for creating a new resource.
      *
@@ -36,9 +49,20 @@ class ProductController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(ProductRequest $request)
     {
+        $product = new Product;
+        $product->name = $request->name;
+        $product->detail = $request->desc;
+        $product->price = $request->price;
+        $product->stock = $request->stock;
+        $product->discount = $request->discount;
+        $product->save();
 
+        
+           return response([
+               'data' => new ProductResource()
+           ],Response::HTTP_CREATED);
     }
 
     /**
@@ -72,7 +96,14 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        //
+        $request['detail'] = $request->desc;
+        unset($request['desc']);
+       return $product->update($request->all());
+
+       return response([
+        'data' => new ProductResource()
+    ],Response::HTTP_CREATED);
+    
     }
 
     /**
